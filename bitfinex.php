@@ -1,5 +1,6 @@
 <?php 
 
+
 class Bitfinex {
 	private $api_key;
 	private $api_secret;
@@ -8,6 +9,7 @@ class Bitfinex {
 	
 	public function __construct($api_key, $api_secret, $api_version = 'v1')
 	{
+                print 'Bitfinex.construct';
 		$this->api_key = $api_key;
 		$this->api_secret = $api_secret;
 		$this->api_version = $api_version;
@@ -152,14 +154,31 @@ class Bitfinex {
 			'X-BFX-SIGNATURE: ' . $signature
 		);
 	}
+
+        private function set_proxy($ch)
+        {
+                $proxy     = '10.32.22.20:8080';
+                $proxyauth = 'bullocko:Tuesday15';
+
+                print "Setting proxy to {$proxy}";
+
+                curl_setopt($ch, CURLOPT_PROXY, $proxy);
+                curl_setopt($ch, CURLOPT_PROXYUSERPWD, $proxyauth);
+        }
+
+        
+
 	
 	private function send_signed_request($data)
 	{
 		$ch = curl_init();
 		$url = $this->base_url . $data['request'];
+
 		
 		$headers = $this->prepare_header($data);
 		
+                $this->set_proxy($ch);
+
 		curl_setopt_array($ch, array(
 			CURLOPT_URL  => $url,
 			CURLOPT_POST => true,
@@ -168,6 +187,7 @@ class Bitfinex {
 			CURLOPT_SSL_VERIFYPEER => false,
 			CURLOPT_POSTFIELDS => ""
 		));
+
 		
 		if( !$result = curl_exec($ch) )
 		{
@@ -183,6 +203,8 @@ class Bitfinex {
 	{
 		$ch = curl_init();
 		$url = $this->base_url . $request;
+
+                $this->set_proxy($ch);
 		
 		curl_setopt_array($ch, array(
 			CURLOPT_URL  => $url,

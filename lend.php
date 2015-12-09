@@ -7,8 +7,11 @@ include_once('./functions.php');
 include_once('./bitfinex.php');
 
 $bfx = new Bitfinex($config['api_key'], $config['api_secret']);
+var_dump( $bfx);
 
+print 'Getting offers';
 $current_offers = $bfx->get_offers();
+var_dump( $current_offers);
 
 // Something is wrong most likely API key
 if( array_key_exists('message', $current_offers) )
@@ -32,8 +35,10 @@ foreach( $current_offers as $item )
 	}
 }
 
+print 'Getting balances';
 $balances = $bfx->get_balances();
 $available_balance = 0;
+var_dump ($balances);
 
 if( $balances )
 {
@@ -52,9 +57,12 @@ if( $balances )
 if( $available_balance >= $config['minimum_balance'] )
 {
 	message("Lending availabe balance of $available_balance");
-	
+
+	print 'Getting lendbook';
 	$lendbook = $bfx->get_lendbook($config['currency']);
 	$offers = $lendbook['asks'];
+        var_dump ($offers);
+
 	
 	$total_amount 	= 0;
 	$next_rate 		= 0;
@@ -89,7 +97,10 @@ if( $available_balance >= $config['minimum_balance'] )
 	}
 	
 	$daily_rate = daily_rate($rate);
+        print "OK, daily rate is $daily_rate";
 	
+        print "About to make Lend offer of ".$config['currency']." $available_balance @ $rate (=".round(($rate/365),5).") for ".$config['period']." days";
+exit (1);
 	$result = $bfx->new_offer($config['currency'], (string) $available_balance, (string) $rate, $config['period'], 'lend');
 	
 	// Successfully lent
@@ -105,7 +116,7 @@ if( $available_balance >= $config['minimum_balance'] )
 }
 else
 {
-	message("Balance of $available_balance {$config['currency']} is not enough to lend.");
+	message("Balance of $available_balance {$config['currency']} is below minimum of {$config['minimum_balance']} - not enough to lend.");
 }
 
 ?>

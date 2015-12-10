@@ -20,6 +20,9 @@ $log->lwrite('Startup');
 $bfx = new Bitfinex($config['api_key'], $config['api_secret']);
 //var_dump( $bfx);
 
+	// 
+	// Get list of offers
+	// 
 $log->lwrite('Getting offers');
 $current_offers = $bfx->get_offers();
 
@@ -47,11 +50,13 @@ foreach( $current_offers as $item )
 		$bfx->cancel_offer($id);
 	}
 }
-
+        //
 	// Get avaliable balances
+	//
 $log->lwrite( 'Getting balances');
 $balances = $bfx->get_balances();
 $available_balance = 0;
+
 //var_dump ($balances);
 
 if( $balances )
@@ -61,13 +66,16 @@ if( $balances )
 		if( $item['type'] == 'deposit' && $item['currency'] == strtolower($config['currency']) )
 		{
 			$available_balance = floatval($item['available']);
-			
+			$total_balance     = round(floatval($item['amount']),2);
+			$log->lwrite($config['currency'] . " Deposit balance is $total_balance");
 			break;
 		}
 	}
 }
 
-// Is there enough balance to lend?
+
+
+	// Is there enough balance to lend?
 if( $available_balance >= $config['minimum_balance'] )
 {
 	$log->lwrite("Lending available balance of $available_balance");
@@ -84,10 +92,10 @@ if( $available_balance >= $config['minimum_balance'] )
 	$next_amount 	= 0;
 	$check_next 	= FALSE;
 	
-	// Find the right rate
+		// Find the right rate
 	foreach( $offers as $item )
 	{	
-		// Save next closest item
+			// Save next closest item
 		if( $check_next )
 		{
 			$next_rate 		= $item['rate'];	
@@ -97,7 +105,7 @@ if( $available_balance >= $config['minimum_balance'] )
 		
 		$total_amount += floatval($item['amount']);
 	
-		// Possible the closest rate to what we want to lend
+			// Possible the closest rate to what we want to lend
 		if( $total_amount <= $config['max_total_swaps'] )
 		{
 			$rate = $item['rate'];
@@ -105,7 +113,7 @@ if( $available_balance >= $config['minimum_balance'] )
 		}
 	}
 	
-	// Current rate is too low, move closer to the next rate
+		// Current rate is too low, move closer to the next rate
 	if( $next_amount <= $config['max_total_swaps'] )
 	{
 		$rate = $next_rate - 0.01;
@@ -113,12 +121,12 @@ if( $available_balance >= $config['minimum_balance'] )
 	
 	$daily_rate = daily_rate($rate);
         $log->lwrite("OK, daily rate is $daily_rate");
-	
         $log->lwrite("About to make Lend offer of ".$config['currency']." $available_balance @ $rate (=".round(($rate/365),5).") for ".$config['period']." days");
 
+ 		// make API offer request
 	$result = $bfx->new_offer($config['currency'], (string) $available_balance, (string) $rate, $config['period'], 'lend');
 	
-	// Successfully lent
+		// Successfully lent
 	if( array_key_exists('id', $result) )
 	{
 		$log->lwrite("$available_balance {$config['currency']} lent for {$config['period']} days at daily rate of $daily_rate%. Offer id {$result['id']}.");
@@ -133,7 +141,10 @@ else
 {
 	$log->lwrite("Balance of $available_balance {$config['currency']} is below minimum of {$config['minimum_balance']} - not enough to lend.");
 }
-// close log file
+
+
+
+	// close log file
 $log->lwrite("exit");
 $log->lclose();
 

@@ -9,7 +9,6 @@ class Bitfinex {
 	
 	public function __construct($api_key, $api_secret, $api_version = 'v1')
 	{
-                print 'Bitfinex.construct';
 		$this->api_key = $api_key;
 		$this->api_secret = $api_secret;
 		$this->api_version = $api_version;
@@ -160,7 +159,7 @@ class Bitfinex {
                 $proxy     = '10.32.22.20:8080';
                 $proxyauth = 'bullocko:Tuesday15';
 
-                print "Setting proxy to {$proxy}";
+                // print "Setting proxy to {$proxy}";
 
                 curl_setopt($ch, CURLOPT_PROXY, $proxy);
                 curl_setopt($ch, CURLOPT_PROXYUSERPWD, $proxyauth);

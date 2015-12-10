@@ -5,21 +5,34 @@ $currency = @$_GET['currency'] ? htmlspecialchars($_GET['currency']) : 'usd';
 include_once("./config-$currency.php"); 
 include_once('./functions.php');
 include_once('./bitfinex.php');
+include_once('./logging.php');
+
+	// Logging class initialization
+$log = new Logging();
+ 
+	// set path and name of log file (optional)
+$log->lfile('./output.log');
+ 
+	// write message to the log file
+$log->lwrite('Startup');
+ 
 
 $bfx = new Bitfinex($config['api_key'], $config['api_secret']);
-var_dump( $bfx);
+//var_dump( $bfx);
 
-print 'Getting offers';
+$log->lwrite('Getting offers');
 $current_offers = $bfx->get_offers();
+
 var_dump( $current_offers);
 
-// Something is wrong most likely API key
+	// Something is wrong most likely API key
 if( array_key_exists('message', $current_offers) )
 {
 	die($current_offers['message']);
 }
 
-// Remove offers that weren't executed for too long
+	// Remove offers that weren't executed for too long
+$log->lwrite('Checking for old offers');
 foreach( $current_offers as $item )
 {
 	$id = $item['id'];
@@ -29,16 +42,17 @@ foreach( $current_offers as $item )
 	
 	if( $config['remove_after'] <= $diff_minutes )
 	{
-		message("Removing offer # $id");
+		$log->lwrite("Removing old offer # $id");
 
 		$bfx->cancel_offer($id);
 	}
 }
 
-print 'Getting balances';
+	// Get avaliable balances
+$log->lwrite( 'Getting balances');
 $balances = $bfx->get_balances();
 $available_balance = 0;
-var_dump ($balances);
+//var_dump ($balances);
 
 if( $balances )
 {
@@ -56,12 +70,13 @@ if( $balances )
 // Is there enough balance to lend?
 if( $available_balance >= $config['minimum_balance'] )
 {
-	message("Lending availabe balance of $available_balance");
+	$log->lwrite("Lending available balance of $available_balance");
 
-	print 'Getting lendbook';
+	$log->lwrite( 'Getting lendbook');
 	$lendbook = $bfx->get_lendbook($config['currency']);
 	$offers = $lendbook['asks'];
-        var_dump ($offers);
+
+        //var_dump ($offers);
 
 	
 	$total_amount 	= 0;
@@ -97,26 +112,29 @@ if( $available_balance >= $config['minimum_balance'] )
 	}
 	
 	$daily_rate = daily_rate($rate);
-        print "OK, daily rate is $daily_rate";
+        $log->lwrite("OK, daily rate is $daily_rate");
 	
-        print "About to make Lend offer of ".$config['currency']." $available_balance @ $rate (=".round(($rate/365),5).") for ".$config['period']." days";
-exit (1);
+        $log->lwrite("About to make Lend offer of ".$config['currency']." $available_balance @ $rate (=".round(($rate/365),5).") for ".$config['period']." days");
+
 	$result = $bfx->new_offer($config['currency'], (string) $available_balance, (string) $rate, $config['period'], 'lend');
 	
 	// Successfully lent
 	if( array_key_exists('id', $result) )
 	{
-		message("$available_balance {$config['currency']} lent for {$config['period']} days at daily rate of $daily_rate%. Offer id {$result['id']}.");
+		$log->lwrite("$available_balance {$config['currency']} lent for {$config['period']} days at daily rate of $daily_rate%. Offer id {$result['id']}.");
 	}
 	else
 	{
 		// Something went wrong
-		message($result);
+		$log->lwrite($result);
 	}
 }
 else
 {
-	message("Balance of $available_balance {$config['currency']} is below minimum of {$config['minimum_balance']} - not enough to lend.");
+	$log->lwrite("Balance of $available_balance {$config['currency']} is below minimum of {$config['minimum_balance']} - not enough to lend.");
 }
+// close log file
+$log->lwrite("exit");
+$log->lclose();
 
 ?>

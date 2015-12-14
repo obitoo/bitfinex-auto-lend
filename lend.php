@@ -11,10 +11,10 @@ include_once('./logging.php');
 $log = new Logging();
  
 	// set path and name of log file (optional)
-$log->lfile('./output.log');
+//	$log->lfile('./output.log');
  
 	// write message to the log file
-$log->lwrite('Startup');
+$log->lwrite('Startup--------------------------');
  
 
 $bfx = new Bitfinex($config['api_key'], $config['api_secret']);
@@ -134,12 +134,13 @@ if( $available_balance >= $config['minimum_balance'] )
 	else
 	{
 		// Something went wrong
-		$log->lwrite($result);
+		$log->lwrite("Something went wrong");
+		var_dump($result);
 	}
 }
 else
 {
-	$log->lwrite("Balance of $available_balance {$config['currency']} is below minimum of {$config['minimum_balance']} - not enough to lend.");
+	$log->lwrite("Available Balance of $available_balance {$config['currency']} is below minimum of {$config['minimum_balance']} - not enough to lend.");
 }
 
 

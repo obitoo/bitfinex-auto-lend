@@ -176,7 +176,7 @@ class Bitfinex {
 		
 		$headers = $this->prepare_header($data);
 		
-                $this->set_proxy($ch);
+//                $this->set_proxy($ch);
 
 		curl_setopt_array($ch, array(
 			CURLOPT_URL  => $url,
@@ -203,7 +203,7 @@ class Bitfinex {
 		$ch = curl_init();
 		$url = $this->base_url . $request;
 
-                $this->set_proxy($ch);
+//                $this->set_proxy($ch);
 		
 		curl_setopt_array($ch, array(
 			CURLOPT_URL  => $url,

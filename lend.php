@@ -35,7 +35,7 @@ if( array_key_exists('message', $current_offers) )
 }
 
 	// Remove offers that weren't executed for too long
-$log->lwrite('Checking for old offers');
+$log->lwrite('Checking for offers older than '.$config['remove_after'].' mins');
 foreach( $current_offers as $item )
 {
 	$id = $item['id'];
@@ -121,7 +121,7 @@ if( $available_balance >= $config['minimum_balance'] )
 	
 	$daily_rate = daily_rate($rate);
         $log->lwrite("OK, daily rate is $daily_rate");
-        $log->lwrite("About to make Lend offer of ".$config['currency']." $available_balance @ $rate (=".round(($rate/365),5).") for ".$config['period']." days");
+        $log->lwrite("About to make Lend offer of ".$config['currency']." $available_balance @ $rate % apr (=".round(($rate/365),5)." daily) for ".$config['period']." days");
 
  		// make API offer request
 	$result = $bfx->new_offer($config['currency'], (string) $available_balance, (string) $rate, $config['period'], 'lend');
